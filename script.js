@@ -1,9 +1,10 @@
 (function () {
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Fotos mostradas se a lista automática da pasta img/portfolio não puder ser lida
-  var PADRAO = ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg'];
-  var PASTA = 'img/portfolio/';
+  // Fotos mostradas se a lista automática do repositório não puder ser lida
+  var PADRAO = ['1.jpg', '2.jpg', '3.jpg', '4.jpg', '5.jpg', '07.JPG', '08.jpg', '09.jpg', '10.jpg', '11.jpg'];
+  // Arquivos do próprio site, que não entram na galeria
+  var RESERVADOS = /^(favicon|logo|thayna|hero|her[oó]i)\b/i;
 
   document.getElementById('ano').textContent = new Date().getFullYear();
 
@@ -41,8 +42,8 @@
   }
 
   // ---------- Galeria automática ----------
-  // Lê a pasta img/portfolio do próprio repositório (GitHub Pages).
-  // Foto nova enviada para a pasta aparece sozinha, em ordem alfabética/numérica.
+  // Lê os arquivos do próprio repositório (GitHub Pages).
+  // Qualquer foto nova enviada aparece sozinha, em ordem numérica/alfabética pelo nome.
   var grid = document.getElementById('grid');
   var fotos = [];
 
@@ -54,19 +55,19 @@
     if (!/\.github\.io$/.test(h)) return Promise.reject();
     var user = h.split('.')[0];
     var repo = seg && seg.indexOf('.') < 0 ? seg : h;
-    try { var c = sessionStorage.getItem('fotos'); if (c) return Promise.resolve(JSON.parse(c)); } catch (e) {}
-    return fetch('https://api.github.com/repos/' + user + '/' + repo + '/contents/img/portfolio')
+    try { var c = sessionStorage.getItem('fotos2'); if (c) return Promise.resolve(JSON.parse(c)); } catch (e) {}
+    return fetch('https://api.github.com/repos/' + user + '/' + repo + '/contents/')
       .then(function (r) { if (!r.ok) throw 0; return r.json(); })
       .then(function (itens) {
-        var nomes = itens.map(function (i) { return i.name; }).filter(ehImagem).sort(natural);
+        var nomes = itens.filter(function (i) { return i.type === 'file'; }).map(function (i) { return i.name; }).filter(function (n) { return ehImagem(n) && !RESERVADOS.test(n); }).sort(natural);
         if (!nomes.length) throw 0;
-        try { sessionStorage.setItem('fotos', JSON.stringify(nomes)); } catch (e) {}
+        try { sessionStorage.setItem('fotos2', JSON.stringify(nomes)); } catch (e) {}
         return nomes;
       });
   }
 
   function montar(nomes) {
-    fotos = nomes.map(function (n) { return PASTA + encodeURIComponent(n); });
+    fotos = nomes.map(function (n) { return encodeURIComponent(n); });
     grid.textContent = '';
     fotos.forEach(function (src, i) {
       var f = document.createElement('figure');
